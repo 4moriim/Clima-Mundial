@@ -18,8 +18,8 @@ function App() {
   }, []);
 
   // Função para buscar a previsão do tempo
-  const fetchPrevisaoDoTempo = (cidade) => {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cidade}&appid=0b8bba1c3781ca35ffddd02f98854587&units=metric&lang=pt_br`) // Busca, através da API, a cidade que o usuário digita
+  const fetchPrevisaoDoTempo = (buscarCidade) => {
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${buscarCidade}&appid=0b8bba1c3781ca35ffddd02f98854587&units=metric&lang=pt_br`) // Busca, através da API, a cidade que o usuário digita
       .then((resposta) => {
         if (resposta.status === 200) {
           return resposta.json();
