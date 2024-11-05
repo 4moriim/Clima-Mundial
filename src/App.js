@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import './App.css';
-import Pesquisar from "./Componentes/Pesquisar"; 
-import DisplayPrevisaoTempo from "./Componentes/DisplayPrevisaoTempo"; 
+import Pesquisar from "./Componentes/Pesquisar";
+import DisplayPrevisaoTempo from "./Componentes/DisplayPrevisaoTempo";
 
 function App() {
   const [cidade, setCidade] = useState(""); // Utilizado para o usuário escolher a cidade
@@ -18,47 +18,49 @@ function App() {
   }, []);
 
   // Função para buscar a previsão do tempo
-  const fetchPrevisaoDoTempo = (buscarCidade) => {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${buscarCidade}&appid=0b8bba1c3781ca35ffddd02f98854587&units=metric&lang=pt_br`) // Busca, através da API, a cidade que o usuário digita
-      .then((resposta) => {
-        if (resposta.status === 200) {
-          return resposta.json();
-        } else {
-          throw new Error("Cidade inválida"); // Alerta acionado caso o usuário digite uma cidade inválida
-        }
-      })
-      .then((dado) => {
+  const fetchPrevisaoDoTempo = async (buscarCidade) => {
+    try {
+      const resposta = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${buscarCidade}&appid=0b8bba1c3781ca35ffddd02f98854587&units=metric&lang=pt_br`);
+
+      if (resposta.status === 200) {
+        const dado = await resposta.json();
         setPrevisaoDoTempo(dado); // Exibe os dados carregados pela API
         setCidade(dado.name); // Atualiza a cidade
         localStorage.setItem('cidade', dado.name); // Salva a nova cidade no localStorage
-      })
-      .catch((erro) => {
-        alert(erro.message); // Exibe mensagem de erro caso seja digitada uma cidade inválida
-        setPrevisaoDoTempo(null);
-      });
+      } else {
+        throw new Error("Cidade inválida"); // Alerta acionado caso o usuário digite uma cidade inválida
+      }
+    } catch (erro) {
+      alert(erro.message); // Exibe mensagem de erro caso seja digitada uma cidade inválida
+      setPrevisaoDoTempo(null);
+    }
   };
 
   // Função para obter a localização do usuário
-  const obterLocalizacao = () => {
+  const obterLocalizacao = async () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((posicao) => {
-        const lat = posicao.coords.latitude;
-        const lon = posicao.coords.longitude;
+      try {
+        const posicao = await new Promise((resolvido, rejeitado) => {
+          navigator.geolocation.getCurrentPosition(resolvido, rejeitado);
+        });
+
+        const latitude = posicao.coords.latitude;
+        const longitude = posicao.coords.longitude;
 
         // Obtém o nome da cidade a partir das coordenadas
-        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=0b8bba1c3781ca35ffddd02f98854587&units=metric&lang=pt_br`)
-          .then((resposta) => resposta.json())
-          .then((dado) => {
-            setCidade(dado.name); // Define a cidade atual
-            setPrevisaoDoTempo(dado); // Define a previsão do tempo
-            localStorage.setItem('cidade', dado.name); // Salva a cidade obtida pela geolocalização
-          })
-          .catch(() => {
-            alert("Não foi possível obter a localização.");
-          });
-      }, () => {
-        alert("Geolocalização não permitida.");
-      });
+        const resposta = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=0b8bba1c3781ca35ffddd02f98854587&units=metric&lang=pt_br`);
+        const dado = await resposta.json();
+
+        setCidade(dado.name); // Define a cidade atual
+        setPrevisaoDoTempo(dado); // Define a previsão do tempo
+        localStorage.setItem('cidade', dado.name); // Salva a cidade obtida pela geolocalização
+      } catch (erro) {
+        if (erro) {
+          alert("Geolocalização não permitida.");
+        } else {
+          alert("Não foi possível obter a localização.");
+        }
+      }
     } else {
       alert("Seu navegador não suporta geolocalização.");
     }
